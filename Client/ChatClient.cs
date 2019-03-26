@@ -1,9 +1,11 @@
 ﻿using Server.Client;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+ 
 
 namespace Client
 {
@@ -13,7 +15,7 @@ namespace Client
 
         public ChatClient()
         {
-            _client = new ClientBase(new TcpClient(new IPEndPoint(IPAddress.Parse("127.0.0.1"), 999)));
+            _client = new ClientBase(new TcpClient(new IPEndPoint(IPAddress.Parse("127.0.0.1"), int.Parse(ConfigurationManager.AppSettings["port"]))));
         }
 
         public void Start()
@@ -29,7 +31,7 @@ namespace Client
         
         private void Auth()
         {
-            Console.WriteLine("\r\nEnter your name: ");
+            Console.Write("\r\nEnter your name: ");
             string name = Console.ReadLine();
             _client.Info.Name = name;
             _client.Send(name, Communication.Model.MessageType.Auth);
@@ -37,10 +39,7 @@ namespace Client
 
         private void WaitInput()
         {
-            Console.WriteLine("\r\nMessage: ");
-            string msg = Console.ReadLine();
-            _client.Send(msg);
-            WaitInput();
+            _client.WaitInput();
         }
     }
 }

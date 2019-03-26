@@ -24,9 +24,9 @@ namespace Communication.Decoder
 
         public async Task ReadMessage()
         {
-            Memory<byte> buffer = new Memory<byte>();
-            await _stream.ReadAsync(buffer);
-            this.MessageRecieved?.Invoke(_sender, JsonConvert.DeserializeObject<Message>(UTF8Encoding.Default.GetString(buffer.ToArray())));            
+            byte[] buffer = new byte[1024];
+            await _stream.ReadAsync(buffer, 0, buffer.Length);
+            this.MessageRecieved?.Invoke(_sender, JsonConvert.DeserializeObject<Message>(UTF8Encoding.Default.GetString(buffer)));            
             this.ReadMessage();
         }
 

@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Server.Client
 {
-    public abstract class ClientBase : Reciever
+    public class ClientBase : Reciever
     {
         private TcpClient _clientConnection;
         private MessageDecoder _decoder;        
@@ -24,9 +24,17 @@ namespace Server.Client
         {
             Info = new ClientInfo(new Random().Next().ToString());
             _clientConnection = client;
-            _decoder = new MessageDecoder(this, client.GetStream());
-            _decoder.MessageRecieved += OnMessageRecieve;
-            _decoder.MessageRecieved += HandleAction;   
+            DecoderInit();
+        }
+
+        private void DecoderInit()
+        {
+            if (_clientConnection.Connected)
+            {
+                _decoder = new MessageDecoder(this, _clientConnection.GetStream());
+
+                _decoder.MessageRecieved += HandleAction;
+            }
         }
 
         // for client only
@@ -35,6 +43,7 @@ namespace Server.Client
             if (!_clientConnection.Connected)
             {
                 await this._clientConnection.ConnectAsync(ip, port);
+                DecoderInit();
                 return true;
             }
 
@@ -56,9 +65,22 @@ namespace Server.Client
             _decoder.WriteMessage(message);
         }
 
+        public void WaitInput()
+        {
+            Console.Write("\r\n>: ");
+            string msg = Console.ReadLine();
+            Send(msg);
+            WaitInput();
+        }
+
         public override void HandleAction(object sender, Message msg)
         {
-            Task.Run(async () => Console.WriteLine($"{msg.Name}: {msg.Text}"));
+            OnMessageRecieve?.Invoke(sender, msg);
+            if (msg.Type == MessageType.Message)
+            {
+                Task.Run(async () => Console.WriteLine($"\r\n<:{msg.Name}: {msg.Text}"));
+                WaitInput();
+            }
         }
     }
 }

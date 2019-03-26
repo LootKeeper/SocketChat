@@ -13,14 +13,14 @@ namespace Server.Core
 {
     public class ServerCore
     {
-        private ConcurrentStack<ClientBase> _nonAuthClients;
-        private ConcurrentDictionary<string, ClientBase> _clients;
+        private ConcurrentBag<ClientBase> _anons;
+        private Dictionary<string, ClientBase> _users;
         private ServerListner _listner;
 
         public ServerCore()
         {
-            _nonAuthClients = new ConcurrentStack<ClientBase>();
-            _clients = new ConcurrentDictionary<string, ClientBase>();
+            _anons = new ConcurrentBag<ClientBase>();
+            _users = new Dictionary<string, ClientBase>();
             _listner = new ServerListner();                       
         }
 
@@ -28,12 +28,13 @@ namespace Server.Core
         {
             _listner.Start();
             _listner.ClientAcceptHandler += ClientAcceptHandler;
+            Console.WriteLine("Server started");
             Console.ReadKey();
         }
 
         private async Task Broadcust(Message message)
         {
-            var clients = GetClients().Where(client => client.Info.Id != message.Id);
+            var clients = _users.Select(user => user.Value).Where(client => client.Info.Id != message.Id);
 
             foreach (var client in clients)
             {                
@@ -41,37 +42,32 @@ namespace Server.Core
             }
         }
 
-        private IEnumerable<ClientBase> GetClients()
-        {
-            return _clients.Select(client => client.Value);
-        }
-
         private void ClientAcceptHandler(object sender, TcpClient client)
         {
             ClientBase entry = new ClientBase(client);
             entry.OnMessageRecieve += MessageRecieved;
-            this._nonAuthClients.Push(entry);            
-            Console.WriteLine($"{entry.Info.Id} connected");            
+            _anons.Add(entry);
+            Console.WriteLine($"{client.Client.LocalEndPoint.ToString()} connected");            
         }
 
         private void MessageRecieved(object sender, Message message)
         {
-            if (message.Type == MessageType.Message)
+            if (message.Type == MessageType.Auth)
             {
-                Console.WriteLine($"message from: {message.Name}");
-                this.Broadcust(message);
-            }
-            else
-            {
-                this.GetClients().First(client => client.Info.Id == message.Id).Info.Name = message.Text;
-                if (this._clients.TryAdd(message.Id, this._nonAuthClients.FirstOrDefault(entry => entry == sender)))
-                {
-                    message.Type = MessageType.Message;
-                    message.Text = $"{message.Name} entred to chat";
-                    Console.WriteLine(message.Text);
-                    this.Broadcust(message);
+                if(_users.TryAdd(message.Text, sender as ClientBase)) { 
+                    Console.WriteLine($"{message.Text} entered to chat");                    
                 }
+
+                return;
             }
+
+            var source = _anons.FirstOrDefault(client => client == sender);
+            if (source != null)
+            {
+                source.Info.Id = message.Id;
+                source.Info.Name = message.Name;
+            }
+            this.Broadcust(message);
         }
     }
 }

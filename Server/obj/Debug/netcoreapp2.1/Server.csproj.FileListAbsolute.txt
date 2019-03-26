@@ -14,3 +14,4 @@ C:\Users\leschuk\source\repos\SocketGame\Server\bin\Debug\netcoreapp2.1\Communic
 C:\Users\leschuk\source\repos\SocketGame\Server\obj\Debug\netcoreapp2.1\Server.csproj.CopyComplete
 C:\Users\leschuk\source\repos\SocketGame\Server\obj\Debug\netcoreapp2.1\Server.dll
 C:\Users\leschuk\source\repos\SocketGame\Server\obj\Debug\netcoreapp2.1\Server.pdb
+C:\Users\leschuk\source\repos\SocketGame\Server\bin\Debug\netcoreapp2.1\Client.dll.config
