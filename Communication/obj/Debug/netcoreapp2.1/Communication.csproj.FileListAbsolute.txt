@@ -1,8 +1,9 @@
 C:\Users\leschuk\source\repos\SocketGame\Communication\bin\Debug\netcoreapp2.1\Communication.deps.json
-C:\Users\leschuk\source\repos\SocketGame\Communication\bin\Debug\netcoreapp2.1\Communication.runtimeconfig.json
-C:\Users\leschuk\source\repos\SocketGame\Communication\bin\Debug\netcoreapp2.1\Communication.runtimeconfig.dev.json
 C:\Users\leschuk\source\repos\SocketGame\Communication\bin\Debug\netcoreapp2.1\Communication.dll
 C:\Users\leschuk\source\repos\SocketGame\Communication\obj\Debug\netcoreapp2.1\Communication.csprojAssemblyReference.cache
 C:\Users\leschuk\source\repos\SocketGame\Communication\obj\Debug\netcoreapp2.1\Communication.csproj.CoreCompileInputs.cache
 C:\Users\leschuk\source\repos\SocketGame\Communication\obj\Debug\netcoreapp2.1\Communication.AssemblyInfoInputs.cache
 C:\Users\leschuk\source\repos\SocketGame\Communication\obj\Debug\netcoreapp2.1\Communication.AssemblyInfo.cs
+C:\Users\leschuk\source\repos\SocketGame\Communication\bin\Debug\netcoreapp2.1\Communication.pdb
+C:\Users\leschuk\source\repos\SocketGame\Communication\obj\Debug\netcoreapp2.1\Communication.dll
+C:\Users\leschuk\source\repos\SocketGame\Communication\obj\Debug\netcoreapp2.1\Communication.pdb

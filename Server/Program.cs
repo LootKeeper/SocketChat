@@ -6,7 +6,8 @@ namespace Server
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            Server.Core.ServerCore server = new Core.ServerCore();
+            server.Start();
         }
     }
 }

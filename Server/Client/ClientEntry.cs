@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Client.ActionHandler
+namespace Server.Client
 {
-    class ClientActionHandlerManager
+    public class ClientEntry
     {
     }
 }

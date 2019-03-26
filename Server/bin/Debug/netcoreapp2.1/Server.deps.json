@@ -6,12 +6,13 @@
   "compilationOptions": {},
   "targets": {
     ".NETCoreApp,Version=v2.1": {
-      "Communication/1.0.0": {
+      "Server/1.0.0": {
         "dependencies": {
-          "Newtonsoft.Json": "12.0.1"
+          "Client": "1.0.0",
+          "Communication": "1.0.0"
         },
         "runtime": {
-          "Communication.dll": {}
+          "Server.dll": {}
         }
       },
       "Newtonsoft.Json/12.0.1": {
@@ -21,11 +22,27 @@
             "fileVersion": "12.0.1.22727"
           }
         }
+      },
+      "Client/1.0.0": {
+        "dependencies": {
+          "Communication": "1.0.0"
+        },
+        "runtime": {
+          "Client.dll": {}
+        }
+      },
+      "Communication/1.0.0": {
+        "dependencies": {
+          "Newtonsoft.Json": "12.0.1"
+        },
+        "runtime": {
+          "Communication.dll": {}
+        }
       }
     }
   },
   "libraries": {
-    "Communication/1.0.0": {
+    "Server/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
@@ -36,6 +53,16 @@
       "sha512": "sha512-pBR3wCgYWZGiaZDYP+HHYnalVnPJlpP1q55qvVb+adrDHmFMDc1NAKio61xTwftK3Pw5h7TZJPJEEVMd6ty8rg==",
       "path": "newtonsoft.json/12.0.1",
       "hashPath": "newtonsoft.json.12.0.1.nupkg.sha512"
+    },
+    "Client/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Communication/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
     }
   }
 }

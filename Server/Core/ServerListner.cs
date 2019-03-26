@@ -15,7 +15,7 @@ namespace Server.Core
 
         public ServerListner()
         {
-            _listner = new TcpListener(IPAddress.Parse("127.0.0.1") ,8080);
+            _listner = new TcpListener(IPAddress.Parse("127.0.0.1"), 8080);
         }
 
         public async Task Start()
@@ -24,7 +24,8 @@ namespace Server.Core
 
             while (true)
             {
-                AcceptClientAsync(_listner.AcceptTcpClientAsync());
+                TcpClient client = await _listner.AcceptTcpClientAsync();
+                await AcceptClientAsync(client);
             }
         }
 
@@ -33,9 +34,9 @@ namespace Server.Core
             _listner.Stop();
         }
 
-        private async Task AcceptClientAsync(Task<TcpClient> client) 
+        private async Task AcceptClientAsync(TcpClient client) 
         {
-            ClientAcceptHandler?.Invoke(this, await client);
+            ClientAcceptHandler?.Invoke(this, client);
         }
     }
 }
