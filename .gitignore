@@ -2,3 +2,5 @@
 \.vs/SocketGame/v15/Server/sqlite3/
 
 Client/obj/
+
+Client/bin/
