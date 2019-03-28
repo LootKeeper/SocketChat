@@ -20,5 +20,10 @@ namespace Server.Client
         {
             OnMessageRecieve?.Invoke(this, msg);    
         }
+
+        public override void ShutDown(object sender, EventArgs args)
+        {
+            _clientConnection.Close();
+        }
     }
 }

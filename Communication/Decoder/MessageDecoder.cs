@@ -22,15 +22,29 @@ namespace Communication.Decoder
 
         public async Task ReadMessage()
         {
-            byte[] buffer = new byte[1024];
-            await _stream.ReadAsync(buffer, 0, buffer.Length);
-            this.MessageRecieved?.Invoke(this, JsonConvert.DeserializeObject<Message>(UTF8Encoding.Default.GetString(buffer)));            
-            this.ReadMessage();
+            try
+            {
+                byte[] buffer = new byte[1024];
+                await _stream.ReadAsync(buffer, 0, buffer.Length);
+                this.MessageRecieved?.Invoke(this, JsonConvert.DeserializeObject<Message>(UTF8Encoding.Default.GetString(buffer)));
+                this.ReadMessage();
+            }
+            catch (Exception ex)
+            {
+                _stream.Close();
+            }
         }
 
         public async Task WriteMessage(Message msg)
         {
-            await _stream.WriteAsync(UTF8Encoding.Default.GetBytes(JsonConvert.SerializeObject(msg)));
+            try
+            {
+                await _stream.WriteAsync(UTF8Encoding.Default.GetBytes(JsonConvert.SerializeObject(msg)));
+            }
+            catch (Exception ex)
+            {
+                _stream.Close();
+            }
         }
     }
 }

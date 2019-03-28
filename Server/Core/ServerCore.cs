@@ -34,9 +34,9 @@ namespace Server.Core
 
         private async Task Broadcust(Message message)
         {
-            var clients = _users.Select(user => user.Value).Where(client => client.Info.Id != message.Id);
+            var clients = _users.Where(client => client.Key != message.Id);
 
-            foreach (var client in clients)
+            foreach (var client in clients.Select(client => client.Value))
             {                
                 client.Send(message);
             }
@@ -56,23 +56,43 @@ namespace Server.Core
             {
                 HandleAuth(sender, message);
             }
+            else if(message.Type == MessageType.Quit)
+            {
+                HandleLogOut(sender, message);
+            }
             else
             {
-                var source = _anons.FirstOrDefault(client => client == sender);
-                if (source != null)
-                {
-                    source.Info.Id = message.Id;
-                    source.Info.Name = message.Name;
-                }
-                this.Broadcust(message);
+                HandleMessage(sender, message);
             }
         }
 
         private void HandleAuth(object sender, Message msg)
         {
-            if (_users.TryAdd(msg.Text, sender as ClientEntry))
+            if (_users.TryAdd(msg.Id, sender as ClientEntry))
             {
                 Console.WriteLine($"{msg.Text} entered to chat");
+            }
+        }
+
+        private void HandleLogOut(object sender, Message msg)
+        {
+            if(_users.Any(user => user.Key == msg.Id))
+            {
+                _users.Remove(msg.Id);
+            }
+        }
+
+        private void HandleMessage(object sender, Message msg)
+        {
+            this.Broadcust(msg);
+        }
+
+        public void ShutDown(object sender, EventArgs args)
+        {
+            _listner.Stop();
+            foreach (var user in _users)
+            {
+                user.Value.ShutDown(sender, args);
             }
         }
     }

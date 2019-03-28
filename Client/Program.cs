@@ -8,7 +8,8 @@ namespace Client
         static void Main(string[] args)
         {
             ChatClient client = new ChatClient();
-            client.Start();
+            AppDomain.CurrentDomain.ProcessExit += client.ShutDown;
+            client.Start();           
         }
     }
 }

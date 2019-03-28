@@ -15,30 +15,19 @@ namespace Server.Client
     {
         protected TcpClient _clientConnection;
         protected MessageDecoder _decoder;        
-
-        public ClientInfo Info;
-
+               
         public ClientBase(TcpClient client)
-        {
-            Info = new ClientInfo(new Random().Next().ToString());
+        {            
             _clientConnection = client;
-        }       
+        }     
 
-        public Message Send(string message)
+        public async Task<Message> Send(Message message)
         {
-            return Send(message, MessageType.Message);
-        }
-
-        public Message Send(string message, MessageType type)
-        {
-            return Send(new Message(Info.Id, type, Info.Name, message));
-        }
-
-        public Message Send(Message message)
-        {
-            _decoder.WriteMessage(message);
+            await _decoder.WriteMessage(message);
             return message;
-        }        
+        }
+
+        public abstract void ShutDown(object sender, EventArgs args);
 
         public abstract void HandleAction(object sender, Message msg);
     }

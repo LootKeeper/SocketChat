@@ -7,6 +7,7 @@ namespace Communication.Model
     public enum MessageType
     {
         Auth,
-        Message
+        Message,
+        Quit
     }
 }

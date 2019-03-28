@@ -1,4 +1,5 @@
 ﻿using Client.Chat;
+using Client.Core;
 using Communication.Decoder;
 using Communication.Model;
 using Server.Client;
@@ -15,9 +16,11 @@ namespace Client
     public class ChatClient : ClientBase
     {
         private ChatEngine _chat;
+        private ClientInfo _info;
 
         public ChatClient() : base(new TcpClient(new IPEndPoint(IPAddress.Parse("127.0.0.1"), int.Parse(ConfigurationManager.AppSettings["port"]))))
         {
+            _info = new ClientInfo(new Random().Next().ToString());
             _chat = new ChatEngine();
         }       
         
@@ -50,16 +53,26 @@ namespace Client
         {
             Console.Write("\r\nEnter your name: ");
             string name = Console.ReadLine();
-            Info.Name = name;
+            _info.Name = name;
             Send(name, Communication.Model.MessageType.Auth);
         }
 
-        public void WaitInput()
+        public async Task WaitInput()
         {
             Console.Write("\r\n>: ");
             string msg = Console.ReadLine();
-            _chat.PushMessage(Send(msg), true);
-            WaitInput();
+            _chat.PushMessage(await Send(msg), true);
+            await WaitInput();
+        }
+
+        public async Task<Message> Send(string message)
+        {
+            return await Send(message, MessageType.Message);
+        }
+
+        public async Task<Message> Send(string message, MessageType type)
+        {
+            return await Send(new Message(_info.Id, type, _info.Name, message));
         }
 
         public override void HandleAction(object sender, Message msg)
@@ -68,6 +81,12 @@ namespace Client
                 _chat.PushMessage(msg);
                 WaitInput();
             });
+        }
+
+        public override void ShutDown(object sender, EventArgs args)
+        {
+            Send("", MessageType.Quit).Wait();
+            _clientConnection.Close();
         }
     }
 }
