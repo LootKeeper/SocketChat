@@ -24,14 +24,17 @@ namespace Communication.Decoder
         {
             try
             {
-                byte[] buffer = new byte[1024];
-                await _stream.ReadAsync(buffer, 0, buffer.Length);
-                this.MessageRecieved?.Invoke(this, JsonConvert.DeserializeObject<Message>(UTF8Encoding.Default.GetString(buffer)));
-                this.ReadMessage();
+                if (_stream.CanRead)
+                {
+                    byte[] buffer = new byte[1024];
+                    await _stream.ReadAsync(buffer, 0, buffer.Length);
+                    this.MessageRecieved?.Invoke(this, JsonConvert.DeserializeObject<Message>(UTF8Encoding.Default.GetString(buffer)));
+                    this.ReadMessage();
+                }
             }
             catch (Exception ex)
             {
-                _stream.Close();
+                _stream?.Close();
             }
         }
 
@@ -39,12 +42,20 @@ namespace Communication.Decoder
         {
             try
             {
-                await _stream.WriteAsync(UTF8Encoding.Default.GetBytes(JsonConvert.SerializeObject(msg)));
+                if (_stream.CanWrite)
+                {
+                    await _stream.WriteAsync(UTF8Encoding.Default.GetBytes(JsonConvert.SerializeObject(msg)));
+                }
             }
             catch (Exception ex)
             {
-                _stream.Close();
+                _stream?.Close();
             }
+        }
+
+        public void Stop()
+        {
+            _stream?.Close();
         }
     }
 }

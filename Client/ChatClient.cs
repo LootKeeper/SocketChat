@@ -72,7 +72,7 @@ namespace Client
 
         public async Task<Message> Send(string message, MessageType type)
         {
-            return await Send(new Message(_info.Id, type, _info.Name, message));
+            return await Send(new Message(_info?.Id ?? "", type, _info?.Name ?? "", message));
         }
 
         public override void HandleAction(object sender, Message msg)
@@ -86,7 +86,8 @@ namespace Client
         public override void ShutDown(object sender, EventArgs args)
         {
             Send("", MessageType.Quit).Wait();
-            _clientConnection.Close();
+            _decoder.MessageRecieved -= HandleAction;
+            _decoder.Stop();
         }
     }
 }

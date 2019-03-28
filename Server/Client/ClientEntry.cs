@@ -10,8 +10,11 @@ namespace Server.Client
     {
         public event EventHandler<Message> OnMessageRecieve;
 
+        public string Ip { get; set; }
+
         public ClientEntry(TcpClient client) : base(client)
         {
+            Ip = client.Client.LocalEndPoint.ToString();
             this._decoder = new Communication.Decoder.MessageDecoder(client.GetStream());
             _decoder.MessageRecieved += HandleAction;
         }
@@ -23,7 +26,8 @@ namespace Server.Client
 
         public override void ShutDown(object sender, EventArgs args)
         {
-            _clientConnection.Close();
+            _decoder.MessageRecieved -= HandleAction;
+            _decoder.Stop();
         }
     }
 }

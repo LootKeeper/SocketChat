@@ -1,6 +1,7 @@
 ﻿using Communication;
 using Communication.Model;
 using Server.Client;
+using Server.MessageHandler;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -11,17 +12,20 @@ using System.Threading.Tasks;
 
 namespace Server.Core
 {
-    public class ServerCore
+    public class ServerCore : IServerHandle
     {
-        private ConcurrentBag<ClientEntry> _anons;
-        private Dictionary<string, ClientEntry> _users;
+        private ConcurrentDictionary<string, ClientEntry> _anons;
+        private ConcurrentDictionary<string, ClientEntry> _users;
+        private MessageHandlerChain _messageHandler;
         private ServerListner _listner;
+        private bool keepAlive = true;
 
         public ServerCore()
         {
-            _anons = new ConcurrentBag<ClientEntry>();
-            _users = new Dictionary<string, ClientEntry>();
-            _listner = new ServerListner();                       
+            _anons = new ConcurrentDictionary<string, ClientEntry>();
+            _users = new ConcurrentDictionary<string, ClientEntry>();
+            _listner = new ServerListner();
+            _messageHandler = new MessageHandlerChain(this);
         }
 
         public async Task Start()
@@ -29,7 +33,14 @@ namespace Server.Core
             _listner.Start();
             _listner.ClientAcceptHandler += ClientAcceptHandler;
             Console.WriteLine("Server started");
-            Console.ReadKey();
+            while (keepAlive)
+            {
+                char key = Console.ReadKey().KeyChar;
+                if(key == 'c')
+                {
+                    keepAlive = false;
+                }
+            }
         }
 
         private async Task Broadcust(Message message)
@@ -43,46 +54,53 @@ namespace Server.Core
         }
 
         private void ClientAcceptHandler(object sender, TcpClient client)
-        {
+        {            
             ClientEntry entry = new ClientEntry(client);
             entry.OnMessageRecieve += MessageRecieved;
-            _anons.Add(entry);
-            Console.WriteLine($"{client.Client.LocalEndPoint.ToString()} connected");            
+            if (_anons.TryAdd(entry.Ip, entry))
+            {
+                Console.WriteLine($"{client.Client.LocalEndPoint.ToString()} connected");
+            }
         }
 
         private void MessageRecieved(object sender, Message message)
         {
-            if (message.Type == MessageType.Auth)
-            {
-                HandleAuth(sender, message);
-            }
-            else if(message.Type == MessageType.Quit)
-            {
-                HandleLogOut(sender, message);
-            }
-            else
-            {
-                HandleMessage(sender, message);
-            }
+            _messageHandler.Handle(sender, message);
         }
 
-        private void HandleAuth(object sender, Message msg)
+        public void HandleAuth(object sender, Message msg)
         {
-            if (_users.TryAdd(msg.Id, sender as ClientEntry))
+            ClientEntry entry = sender as ClientEntry;
+
+            if(_anons.TryRemove(entry.Ip, out entry))
             {
-                Console.WriteLine($"{msg.Text} entered to chat");
-            }
+                if (_users.TryAdd(msg.Id, entry))
+                {
+                    Console.WriteLine($"{msg.Text} entered to chat");
+                }
+            }            
         }
 
-        private void HandleLogOut(object sender, Message msg)
+        public void HandleLogOut(object sender, Message msg)
         {
             if(_users.Any(user => user.Key == msg.Id))
             {
-                _users.Remove(msg.Id);
+                ClientEntry user = null;
+                _users.Remove(msg.Id, out user);
+                user.ShutDown(this, null);
+                user.OnMessageRecieve -= HandleMessage;
+                Console.WriteLine($"{msg.Name} logout");
             }
+
+            ClientEntry entry = null;
+            if(_anons.TryRemove((sender as ClientEntry).Ip, out entry))
+            {
+                entry.ShutDown(this, null);
+                entry.OnMessageRecieve -= HandleMessage;
+            }            
         }
 
-        private void HandleMessage(object sender, Message msg)
+        public void HandleMessage(object sender, Message msg)
         {
             this.Broadcust(msg);
         }
@@ -90,6 +108,7 @@ namespace Server.Core
         public void ShutDown(object sender, EventArgs args)
         {
             _listner.Stop();
+            _listner.ClientAcceptHandler -= ClientAcceptHandler;
             foreach (var user in _users)
             {
                 user.Value.ShutDown(sender, args);
