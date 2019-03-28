@@ -11,76 +11,35 @@ using System.Threading.Tasks;
 
 namespace Server.Client
 {
-    public class ClientBase : Reciever
+    public abstract class ClientBase : Reciever
     {
-        private TcpClient _clientConnection;
-        private MessageDecoder _decoder;        
+        protected TcpClient _clientConnection;
+        protected MessageDecoder _decoder;        
 
         public ClientInfo Info;
-
-        public event EventHandler<Message> OnMessageRecieve;
 
         public ClientBase(TcpClient client)
         {
             Info = new ClientInfo(new Random().Next().ToString());
             _clientConnection = client;
-            DecoderInit();
-        }
+        }       
 
-        private void DecoderInit()
+        public Message Send(string message)
         {
-            if (_clientConnection.Connected)
-            {
-                _decoder = new MessageDecoder(this, _clientConnection.GetStream());
-
-                _decoder.MessageRecieved += HandleAction;
-            }
+            return Send(message, MessageType.Message);
         }
 
-        // for client only
-        public async Task<bool> Start(IPAddress ip, int port)
+        public Message Send(string message, MessageType type)
         {
-            if (!_clientConnection.Connected)
-            {
-                await this._clientConnection.ConnectAsync(ip, port);
-                DecoderInit();
-                return true;
-            }
-
-            return false;            
+            return Send(new Message(Info.Id, type, Info.Name, message));
         }
 
-        public void Send(string message)
-        {
-            Send(message, MessageType.Message);
-        }
-
-        public void Send(string message, MessageType type)
-        {
-            Send(new Message(Info.Id, type, Info.Name, message));
-        }
-
-        public void Send(Message message)
+        public Message Send(Message message)
         {
             _decoder.WriteMessage(message);
-        }
+            return message;
+        }        
 
-        public void WaitInput()
-        {
-            Console.Write("\r\n>: ");
-            string msg = Console.ReadLine();
-            Send(msg);
-            WaitInput();
-        }
-
-        public override void HandleAction(object sender, Message msg)
-        {
-            OnMessageRecieve?.Invoke(sender, msg);
-            if (msg.Type == MessageType.Message)
-            {
-                Task.Run(async () => Console.WriteLine($"\r\n<:{msg.Name}: {msg.Text}"));
-                WaitInput();
-            }
-        }
+        public abstract void HandleAction(object sender, Message msg);
     }
 }

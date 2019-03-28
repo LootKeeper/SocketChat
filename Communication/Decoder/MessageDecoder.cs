@@ -12,12 +12,10 @@ namespace Communication.Decoder
     public class MessageDecoder
     {
         private NetworkStream _stream;
-        private object _sender;
         public event EventHandler<Message> MessageRecieved;
 
-        public MessageDecoder(object sender, NetworkStream stream)
+        public MessageDecoder(NetworkStream stream)
         {
-            _sender = sender;
             this._stream = stream;
             this.ReadMessage();
         }
@@ -26,7 +24,7 @@ namespace Communication.Decoder
         {
             byte[] buffer = new byte[1024];
             await _stream.ReadAsync(buffer, 0, buffer.Length);
-            this.MessageRecieved?.Invoke(_sender, JsonConvert.DeserializeObject<Message>(UTF8Encoding.Default.GetString(buffer)));            
+            this.MessageRecieved?.Invoke(this, JsonConvert.DeserializeObject<Message>(UTF8Encoding.Default.GetString(buffer)));            
             this.ReadMessage();
         }
 

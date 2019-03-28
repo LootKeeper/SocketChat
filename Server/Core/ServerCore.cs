@@ -13,14 +13,14 @@ namespace Server.Core
 {
     public class ServerCore
     {
-        private ConcurrentBag<ClientBase> _anons;
-        private Dictionary<string, ClientBase> _users;
+        private ConcurrentBag<ClientEntry> _anons;
+        private Dictionary<string, ClientEntry> _users;
         private ServerListner _listner;
 
         public ServerCore()
         {
-            _anons = new ConcurrentBag<ClientBase>();
-            _users = new Dictionary<string, ClientBase>();
+            _anons = new ConcurrentBag<ClientEntry>();
+            _users = new Dictionary<string, ClientEntry>();
             _listner = new ServerListner();                       
         }
 
@@ -44,7 +44,7 @@ namespace Server.Core
 
         private void ClientAcceptHandler(object sender, TcpClient client)
         {
-            ClientBase entry = new ClientBase(client);
+            ClientEntry entry = new ClientEntry(client);
             entry.OnMessageRecieve += MessageRecieved;
             _anons.Add(entry);
             Console.WriteLine($"{client.Client.LocalEndPoint.ToString()} connected");            
@@ -54,20 +54,26 @@ namespace Server.Core
         {
             if (message.Type == MessageType.Auth)
             {
-                if(_users.TryAdd(message.Text, sender as ClientBase)) { 
-                    Console.WriteLine($"{message.Text} entered to chat");                    
-                }
-
-                return;
+                HandleAuth(sender, message);
             }
-
-            var source = _anons.FirstOrDefault(client => client == sender);
-            if (source != null)
+            else
             {
-                source.Info.Id = message.Id;
-                source.Info.Name = message.Name;
+                var source = _anons.FirstOrDefault(client => client == sender);
+                if (source != null)
+                {
+                    source.Info.Id = message.Id;
+                    source.Info.Name = message.Name;
+                }
+                this.Broadcust(message);
             }
-            this.Broadcust(message);
+        }
+
+        private void HandleAuth(object sender, Message msg)
+        {
+            if (_users.TryAdd(msg.Text, sender as ClientEntry))
+            {
+                Console.WriteLine($"{msg.Text} entered to chat");
+            }
         }
     }
 }

@@ -4,8 +4,8 @@ using System.Text;
 
 namespace Communication.Model
 {
-    public abstract class Reciever
+    public interface Reciever
     {
-        public abstract void HandleAction(object sender, Message message);
+        void HandleAction(object sender, Message message);
     }
 }

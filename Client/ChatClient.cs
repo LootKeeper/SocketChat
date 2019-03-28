@@ -1,45 +1,73 @@
-﻿using Server.Client;
+﻿using Client.Chat;
+using Communication.Decoder;
+using Communication.Model;
+using Server.Client;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
- 
+using System.Threading.Tasks;
 
 namespace Client
 {
-    public class ChatClient
+    public class ChatClient : ClientBase
     {
-        private ClientBase _client;        
+        private ChatEngine _chat;
 
-        public ChatClient()
+        public ChatClient() : base(new TcpClient(new IPEndPoint(IPAddress.Parse("127.0.0.1"), int.Parse(ConfigurationManager.AppSettings["port"]))))
         {
-            _client = new ClientBase(new TcpClient(new IPEndPoint(IPAddress.Parse("127.0.0.1"), int.Parse(ConfigurationManager.AppSettings["port"]))));
-        }
-
+            _chat = new ChatEngine();
+        }       
+        
         public void Start()
         {
-            bool isConnected = _client.Start(IPAddress.Parse("127.0.0.1"), 8080).GetAwaiter().GetResult();
-            if (isConnected)
+            Task.Run(async () => { Start(IPAddress.Parse("127.0.0.1"), 8080); });
+            Auth();
+            WaitInput();
+        }
+
+        public async Task Start(IPAddress ip, int port)
+        {
+            if (!_clientConnection.Connected)
+            {                
+                await this._clientConnection.ConnectAsync(ip, port);
+                DecoderInit();                
+            }            
+        }
+
+        private void DecoderInit()
+        {
+            if (_clientConnection.Connected)
             {
-                Console.WriteLine("Connected to server");
-                Auth();
-                WaitInput();
+                _decoder = new MessageDecoder(_clientConnection.GetStream());
+                _decoder.MessageRecieved += HandleAction;
             }
         }
-        
+
         private void Auth()
         {
             Console.Write("\r\nEnter your name: ");
             string name = Console.ReadLine();
-            _client.Info.Name = name;
-            _client.Send(name, Communication.Model.MessageType.Auth);
+            Info.Name = name;
+            Send(name, Communication.Model.MessageType.Auth);
         }
 
-        private void WaitInput()
+        public void WaitInput()
         {
-            _client.WaitInput();
+            Console.Write("\r\n>: ");
+            string msg = Console.ReadLine();
+            _chat.PushMessage(Send(msg), true);
+            WaitInput();
+        }
+
+        public override void HandleAction(object sender, Message msg)
+        {
+            Task.Run(async () => {
+                _chat.PushMessage(msg);
+                WaitInput();
+            });
         }
     }
 }
